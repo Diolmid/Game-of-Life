@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Game of Life/Pattern")]
+[CreateAssetMenu(menuName = "Game of Life/Start Pattern")]
 public class Pattern : ScriptableObject
 {
     public Vector2Int[] cells;
