@@ -1,11 +1,8 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Game of Life/Start Pattern")]
-public class Pattern : ScriptableObject
+public static class Utility
 {
-    public Vector2Int[] cells;
-
-    public Vector2Int GetCenter()
+    public static Vector2Int GetCenterOfCells(Vector2Int[] cells)
     {
         if (cells == null || cells.Length == 0)
             return Vector2Int.zero;
@@ -18,7 +15,7 @@ public class Pattern : ScriptableObject
             var cell = cells[i];
 
             min.x = Mathf.Min(cell.x, min.x);
-            min.y = Mathf.Min (cell.y, min.y);
+            min.y = Mathf.Min(cell.y, min.y);
             max.x = Mathf.Max(cell.x, max.x);
             max.y = Mathf.Max(cell.y, max.y);
         }

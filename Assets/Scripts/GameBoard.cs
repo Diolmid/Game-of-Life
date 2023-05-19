@@ -5,11 +5,15 @@ using UnityEngine.Tilemaps;
 
 public class GameBoard : MonoBehaviour
 {
+    public int Population { get ; private set; }
+    public int Iterations { get ; private set; }
+    public float Time { get ; private set; }
+
     [SerializeField] private float _updateInterval = 0.05f;
     [SerializeField, Space] private Tilemap _currentState;
     [SerializeField] private Tilemap _nextState;
     [SerializeField, Space] private Tile _aliveTile;
-    [SerializeField, Space] private Pattern _pattern;
+    [SerializeField, Space] private StartPattern _pattern;
 
     private HashSet<Vector3Int> _aliveCells;
     private HashSet<Vector3Int> _cellsToCheck;
@@ -22,40 +26,54 @@ public class GameBoard : MonoBehaviour
 
     private void Start()
     {
-        SetPattern(_pattern);
+        Initialize();
+    }
+    private void OnEnable()
+    {
+        StartCoroutine(Simulate());
     }
 
-    private void SetPattern(Pattern pattern)
+    private void Initialize()
     {
-        Clear();
+        ClearBoard();
 
-        var center = _pattern.GetCenter();
-
+        var center = Utility.GetCenterOfCells(_pattern.cells);
         for (int i = 0; i < _pattern.cells.Length; i++)
         {
             var cell = (Vector3Int)(_pattern.cells[i] - center);
             _currentState.SetTile(cell, _aliveTile);
             _aliveCells.Add(cell);
         }
+
+        Population = _aliveCells.Count;
     }
 
-    private void Clear()
+    private void ClearBoard()
     {
         _currentState.ClearAllTiles();
         _nextState.ClearAllTiles();
-    }
+        _aliveCells.Clear();
+        _cellsToCheck.Clear();
 
-    private void OnEnable()
-    {
-        StartCoroutine(Simulate());
+        Population = 0;
+        Iterations = 0;
+        Time = 0;
     }
 
     private IEnumerator Simulate()
     {
+        var interval = new WaitForSeconds(_updateInterval);
+        yield return interval;
+
         while (enabled)
         {
             UpdateCells();
-            yield return new WaitForSeconds(_updateInterval);
+
+            Population = _aliveCells.Count;
+            Iterations++;
+            Time += _updateInterval;
+
+            yield return interval;
         }
     }
 
@@ -75,8 +93,8 @@ public class GameBoard : MonoBehaviour
 
         foreach (var cell in _cellsToCheck)
         {
-            int neighbors = CountNeighbors(cell);
-            bool alive = IsAlive(cell);
+            int neighbors = CountCellNeighbors(cell);
+            bool alive = IsCellAlive(cell);
 
             if (!alive && neighbors == 3)
             {
@@ -98,7 +116,7 @@ public class GameBoard : MonoBehaviour
         _nextState.ClearAllTiles();
     }
 
-    private int CountNeighbors(Vector3Int cell)
+    private int CountCellNeighbors(Vector3Int cell)
     {
         int count = 0;
 
@@ -110,7 +128,7 @@ public class GameBoard : MonoBehaviour
                     continue;
 
                 var neighbor = cell + new Vector3Int(x, y, 0);
-                if(IsAlive(neighbor))
+                if(IsCellAlive(neighbor))
                     count++;
             }
         }
@@ -118,7 +136,7 @@ public class GameBoard : MonoBehaviour
         return count;
     }
 
-    private bool IsAlive(Vector3Int cell)
+    private bool IsCellAlive(Vector3Int cell)
     {
         return _currentState.HasTile(cell);
     }
